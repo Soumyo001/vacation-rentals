@@ -1,4 +1,6 @@
 from decimal import Decimal
+from django.contrib.gis.db.models.functions import Distance
+from django.db.models import F
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404
@@ -160,5 +162,31 @@ def property_list(request):
     return render(
         request,
         "property_app/property_list.html",
+        context,
+    )
+
+def property_detail(request, slug):
+    property_obj = get_object_or_404(
+        Property.objects.filter(
+            is_active=True,
+            location__is_active=True,
+        ).select_related("location")
+        .prefetch_related("images")
+        .annotate(
+            distance_to_city=Distance(
+                "point",
+                F("location__point"),
+            )
+        ),
+        slug=slug,
+    )
+
+    context = {
+        "property": property_obj,
+    }
+
+    return render(
+        request,
+        "property_app/property_detail.html",
         context,
     )

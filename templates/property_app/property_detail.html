@@ -1,0 +1,166 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+    {{ property.title }} | Vacation Rentals
+{% endblock %}
+
+{% block content %}
+
+<section class="detail-section">
+    <a href="{% url 'property_list' %}" class="back-link">
+        ← Back to properties
+    </a>
+
+    <div class="detail-heading">
+        <span class="property-type">
+            {{ property.property_type }}
+        </span>
+
+        <h1>{{ property.title }}</h1>
+
+        <p class="property-location">
+            {{ property.location.city }},
+            {{ property.location.country }}
+        </p>
+    </div>
+
+    <!-- Property image gallery -->
+    <div class="detail-gallery">
+        {% for image in property.images.all %}
+            <div class="gallery-image">
+                <img
+                    src="{{ image.image.url }}"
+                    alt="{{ image.alt_text|default:property.title }}"
+                    loading="lazy"
+                >
+            </div>
+        {% empty %}
+            <div class="image-placeholder">
+                No property images available.
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="detail-layout">
+
+        <!-- Main property information -->
+        <div class="detail-main">
+
+            <section class="detail-block">
+                <h2>About this property</h2>
+
+                {% if property.description %}
+                    <p>{{ property.description }}</p>
+                {% else %}
+                    <p>
+                        Property description is not available.
+                    </p>
+                {% endif %}
+            </section>
+
+            <section class="detail-block">
+                <h2>Property details</h2>
+
+                <div class="detail-facts">
+                    <div>
+                        <strong>{{ property.bedrooms }}</strong>
+                        <span>Bedrooms</span>
+                    </div>
+
+                    <div>
+                        <strong>{{ property.bathrooms }}</strong>
+                        <span>Bathrooms</span>
+                    </div>
+
+                    {% if property.area_sqft %}
+                        <div>
+                            <strong>{{ property.area_sqft }}</strong>
+                            <span>Square feet</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="detail-block">
+                <h2>Amenities</h2>
+
+                {% if property.amenities %}
+                    <ul class="amenities-list">
+                        {% for amenity in property.amenities %}
+                            <li>{{ amenity }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No amenities have been listed.</p>
+                {% endif %}
+            </section>
+
+            <section class="detail-block">
+                <h2>Location & Distance</h2>
+
+                <p>
+                    <strong>City:</strong>
+                    {{ property.location.city }}
+                </p>
+
+                <p>
+                    <strong>Country:</strong>
+                    {{ property.location.country }}
+                </p>
+
+                {% if property.address %}
+                    <p>
+                        <strong>Address:</strong>
+                        {{ property.address }}
+                    </p>
+                {% endif %}
+
+                {% if property.distance_to_city != None %}
+                    <p class="distance-value">
+                        {{ property.distance_to_city.km|floatformat:2 }} km
+                    </p>
+                    <p>
+                        Straight-line distance from the {{ property.location.city }} reference point.
+                    </p>
+                {% else %}
+                    <p>Distance information is unavailable.</p>
+                {% endif %}
+                {% if property.location.point %}
+                    <a
+                        class="nearby-link"
+                        href="{% url 'property_list' %}?location_id={{ property.location_id }}&amp;radius_km=5"
+                    >
+                        Explore nearby properties & spatial filters →
+                    </a>
+                {% endif %}
+            </section>
+
+        </div>
+
+        <!-- Property pricing -->
+        <aside class="detail-sidebar">
+            <div class="price-card">
+                <span>Listed price</span>
+
+                <h2>
+                    USD {{ property.price|floatformat:2 }}
+                </h2>
+
+                <p>
+                    {{ property.property_type }} in
+                    {{ property.location.city }}
+                </p>
+            </div>
+        </aside>
+
+    </div>
+
+    <p class="demo-note">
+        Geographic distances are calculated using the
+        demonstration coordinates in our dataset.
+    </p>
+
+</section>
+
+{% endblock %}

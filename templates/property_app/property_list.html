@@ -94,7 +94,14 @@
                         {{ property.property_type }}
                     </span>
 
-                    <h2>{{ property.title }}</h2>
+                    <h2>
+                        <a
+                            class="property-detail-link"
+                            href="{% url 'property_detail' property.slug %}"
+                        >
+                            {{ property.title }}
+                        </a>
+                    </h2>
 
                     <p class="property-location">
                         {{ property.location.city }},
