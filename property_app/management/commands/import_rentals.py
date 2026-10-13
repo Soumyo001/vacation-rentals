@@ -11,8 +11,18 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils.text import slugify
 
-from property_app.models import Location, Property
+from io import BytesIO
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
+from django.core.files.base import ContentFile
+
+from PIL import Image, UnidentifiedImageError
+
+from property_app.models import Location, Property, PropertyImage
+
+MAX_IMAGE_SIZE = 8 * 1024 * 1024
 
 REQUIRED_COLUMNS = {
     "location_id",
@@ -32,6 +42,7 @@ REQUIRED_COLUMNS = {
     "property_footprint_geojson",
     "property_status",
     "published",
+    "images",
 }
 
 
@@ -125,6 +136,43 @@ def parse_geometry(value, expected_type):
 
     return geometry
 
+def download_image(url):
+    parsed_url = urlparse(url)
+
+    # dataset contains Unsplash image URLs
+    if (
+        parsed_url.scheme != "https"
+        or parsed_url.hostname != "images.unsplash.com"
+    ):
+        raise ValueError("Unsupported image URL.")
+
+    request = Request(
+        url,
+        headers={"User-Agent": "VacationRentalAssignment/1.0"},
+    )
+
+    with urlopen(request, timeout=20) as response:
+        image_data = response.read(MAX_IMAGE_SIZE + 1)
+
+    if len(image_data) > MAX_IMAGE_SIZE:
+        raise ValueError("Image exceeds the 8 MB limit.")
+    
+    with Image.open(BytesIO(image_data)) as image:
+        image_format = image.format
+        image.verify()
+
+    extensions = {
+        "JPEG": ".jpg",
+        "PNG": ".png",
+        "WEBP": ".webp",
+    }
+
+    extension = extensions.get(image_format)
+
+    if extension is None:
+        raise ValueError("Unsupported image format.")
+
+    return image_data, extension
 
 class Command(BaseCommand):
     help = "Import vacation rentals from CSV, Excel, or Parquet."
@@ -140,6 +188,116 @@ class Command(BaseCommand):
             "--limit",
             type=int,
             help="Import only the first N records.",
+        )
+
+        parser.add_argument(
+            "--with-images",
+            action="store_true",
+            help="Download and import property images.",
+        )
+
+    
+    def import_images(self, dataframe):
+        downloaded_images = {}
+
+        created = 0
+        repaired = 0
+        skipped = 0
+        failed = 0
+
+        for row in dataframe.to_dict("records"):
+            property_obj = Property.objects.get(
+                slug=row["property_slug"]
+            )
+
+            try:
+                image_urls = json.loads(row["images"])
+
+                if not isinstance(image_urls, list):
+                    raise ValueError("Images must be a list.")
+
+            except (ValueError, TypeError) as error:
+                self.stderr.write(
+                    f"Invalid images for {property_obj.title}: {error}"
+                )
+                failed += 1
+                continue
+
+            for position, image_url in enumerate(image_urls):
+                existing_image = PropertyImage.objects.filter(
+                    property=property_obj,
+                    sort_order=position,
+                ).first()
+
+                if (
+                    existing_image
+                    and existing_image.image
+                    and existing_image.image.storage.exists(existing_image.image.name)
+                ):
+                    skipped += 1
+                    continue
+
+                if not isinstance(image_url, str) or not image_url.strip():
+                    failed += 1
+                    continue
+
+                # Reuse downloaded bytes when URLs repeat.
+                if image_url not in downloaded_images:
+                    try:
+                        downloaded_images[image_url] = download_image(
+                            image_url
+                        )
+
+                    except (
+                        HTTPError,
+                        URLError,
+                        TimeoutError,
+                        OSError,
+                        ValueError,
+                        UnidentifiedImageError,
+                    ) as error:
+                        downloaded_images[image_url] = None
+
+                        self.stderr.write(
+                            f"Image download failed: {error}"
+                        )
+
+                downloaded_image = downloaded_images[image_url]
+
+                if downloaded_image is None:
+                    failed += 1
+                    continue
+
+                image_data, extension = downloaded_image
+
+                property_image = existing_image or PropertyImage(
+                    property=property_obj,
+                    sort_order=position,
+                )
+
+                property_image.alt_text = property_obj.title
+                property_image.is_primary = (position == 0)
+
+                filename = f"{property_obj.slug}-{position + 1}{extension}"
+
+                property_image.image.save(
+                    filename,
+                    ContentFile(image_data),
+                    save=True,
+                )
+
+                if existing_image:
+                    repaired += 1
+                else:
+                    created += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Images created: {created}, "
+                f"repaired: {repaired}, "
+                f"skipped: {skipped}, "
+                f"failed: {failed}."
+            )
         )
 
     def handle(self, *args, **options):
@@ -278,3 +436,6 @@ class Command(BaseCommand):
                 f"Properties updated: {updated_properties}."
             )
         )
+
+        if options["with_images"]:
+            self.import_images(dataframe)
