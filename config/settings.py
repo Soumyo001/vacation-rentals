@@ -31,6 +31,9 @@ ALLOWED_HOSTS = [
     host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS","127.0.0.1,localhost").split(",") if host.strip()
 ]
 
+# Allow map tile providers to identify requests from our application.
+# Cross-origin requests receive only the site's origin, not the full URL.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # Application definition
 
