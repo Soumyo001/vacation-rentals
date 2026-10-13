@@ -1,0 +1,155 @@
+
+{% extends "base.html" %}
+
+{% block title %}Available Properties{% endblock %}
+
+{% block content %}
+
+<section class="listing-section">
+    <a href="{% url 'home' %}" class="back-link">
+        ← Back to search
+    </a>
+
+    <h1>Available Vacation Rentals</h1>
+
+    {% if selected_location %}
+        <p class="listing-description">
+            Properties near {{ selected_location.name }},
+            {{ selected_location.country }}
+        </p>
+    {% elif location_query %}
+        <p class="listing-description">
+            Search results for "{{ location_query }}"
+        </p>
+    {% else %}
+        <p class="listing-description">
+            Explore our available properties.
+        </p>
+    {% endif %}
+
+    {% if spatial_form %}
+        <form method="get" class="spatial-form">
+            <input
+                type="hidden"
+                name="location_id"
+                value="{{ selected_location.id }}"
+            >
+
+            <div class="spatial-field">
+                {{ spatial_form.radius_km.label_tag }}
+                {{ spatial_form.radius_km }}
+                {{ spatial_form.radius_km.errors }}
+            </div>
+
+            <div class="boundary-field">
+                {{ spatial_form.within_boundary }}
+                {{ spatial_form.within_boundary.label_tag }}
+            </div>
+
+            <button type="submit" class="search-button">
+                Apply Filters
+            </button>
+        </form>
+    {% endif %}
+    {% if boundary_filter_active %}
+        <p class="filter-notice">
+            Boundary intersection filter is active. Only properties whose footprints intersect {{ selected_location.name }}'s boundary are included.
+        </p>
+    {% endif %}
+
+    {% if search_error %}
+        <p class="form-message">{{ search_error }}</p>
+    {% endif %}
+
+    {% if spatial_message %}
+        <p class="form-message">{{ spatial_message }}</p>
+    {% endif %}
+
+    <p class="result-count">
+        {{ page_obj.paginator.count }} properties found
+    </p>
+
+    <div class="property-grid">
+        {% for property in page_obj %}
+
+            <article class="property-card">
+                <div class="property-image">
+                    {% for image in property.images.all %}
+                        {% if forloop.first %}
+                            <img
+                                src="{{ image.image.url }}"
+                                alt="{{ image.alt_text|default:property.title }}"
+                                loading="lazy"
+                            >
+                        {% endif %}
+                    {% empty %}
+                        <div class="image-placeholder">
+                            No image available
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="property-content">
+                    <span class="property-type">
+                        {{ property.property_type }}
+                    </span>
+
+                    <h2>{{ property.title }}</h2>
+
+                    <p class="property-location">
+                        {{ property.location.city }},
+                        {{ property.location.country }}
+                    </p>
+
+                    <p class="property-features">
+                        {{ property.bedrooms }} Bedrooms
+                        ·
+                        {{ property.bathrooms }} Bathrooms
+                    </p>
+
+                    <p class="property-price">
+                        USD {{ property.price|floatformat:2 }}
+                    </p>
+                    {% if not selected_location and property.location.point %}
+                        <a
+                            class="nearby-link"
+                            href="{% url 'property_list' %}?location_id={{ property.location_id }}"
+                        >
+                            Search near {{ property.location.name }} (5 km) →
+                        </a>
+                    {% endif %}
+                </div>
+            </article>
+
+        {% empty %}
+            <div class="empty-state">
+                No active properties match your search.
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <nav class="pagination" aria-label="Property pages">
+
+            {% if page_obj.has_previous %}
+                <a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">
+                    ← Previous
+                </a>
+            {% endif %}
+
+            <span>
+                Page {{ page_obj.number }}
+                of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">
+                    Next →
+                </a>
+            {% endif %}
+
+        </nav>
+    {% endif %}
+</section>
+
+{% endblock %}

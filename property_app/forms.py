@@ -1,4 +1,5 @@
 from django import forms
+from decimal import Decimal
 
 class LocationSearchForm(forms.Form):
     location = forms.CharField(
@@ -22,3 +23,26 @@ class LocationSearchForm(forms.Form):
             raise forms.ValidationError("Enter a valid location name")
 
         return location
+
+class SpatialFilterForm(forms.Form):
+    radius_km = forms.DecimalField(
+        label="Search radius (km)",
+        required=False,
+        initial=Decimal("5.0"),
+        min_value=Decimal("0.5"),
+        max_value=Decimal("100.0"),
+        max_digits=5,
+        decimal_places=1,
+        widget=forms.NumberInput(
+            attrs={
+                "step": "0.5",
+                "min": "0.5",
+                "max": "100",
+            }
+        ),
+    )
+
+    within_boundary = forms.BooleanField(
+        label="Property footprint intersects location boundary",
+        required=False,
+    )

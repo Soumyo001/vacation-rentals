@@ -53,7 +53,10 @@
 
         <div class="location-list">
             {% for location in matching_locations %}
-                <article class="location-item">
+                <a
+                    class="location-item location-link"
+                    href="{% url 'property_list' %}?location_id={{ location.id }}"
+                >
                     <span class="location-icon" aria-hidden="true">
                         ⌖
                     </span>
@@ -68,7 +71,7 @@
                             {{ location.country }}
                         </p>
                     </div>
-                </article>
+                </a>
             {% empty %}
                 <p class="empty-state">
                     No matching locations were found.
@@ -76,6 +79,14 @@
                 </p>
             {% endfor %}
         </div>
+        {% if matching_locations %}
+            <a
+                class="view-all-link"
+                href="{% url 'property_list' %}?location={{ form.cleaned_data.location|urlencode }}"
+            >
+                View properties matching this search →
+            </a>
+        {% endif %}
     </section>
 {% endif %}
 
