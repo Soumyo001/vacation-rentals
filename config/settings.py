@@ -49,6 +49,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
 
+    # Vector integration
+    "pgvector.django",
+
     # application
     "property_app",
 ]
