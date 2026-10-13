@@ -1,0 +1,13 @@
+Django>=5.2,<5.3
+djangorestframework>=3.16,<4
+django-filter>=25.1,<27
+
+psycopg[binary]>=3.2,<4
+pgvector>=0.4,<0.6
+
+Pillow>=11,<13
+pandas>=2.2,<3
+openpyxl>=3.1,<4
+pyarrow>=20,<25
+
+python-dotenv>=1,<2
