@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Vacation Rentals{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'property_app/style.css' %}">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-content">
+            <a href="{% url 'home' %}" class="brand">
+                <span class="brand-icon">⌂</span>
+                Vacation Rentals
+            </a>
+
+            <span class="header-note">Find a place that feels like home</span>
+        </div>
+    </header>
+
+    <main class="page-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</body>
+</html>

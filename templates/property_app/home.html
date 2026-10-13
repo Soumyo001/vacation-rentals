@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Find Vacation Rentals{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <span class="eyebrow">DISCOVER YOUR NEXT DESTINATION</span>
+
+    <h1>
+        Find your perfect
+        <span>vacation rental.</span>
+    </h1>
+
+    <p class="hero-description">
+        From peaceful retreats to city escapes,
+        discover vacation rentals around the world.
+    </p>
+
+    <div class="search-panel">
+        <form method="get" class="search-form">
+
+            <div class="form-field">
+                <div class="field-group">
+                    {{ form.location.label_tag }}
+                    {{ form.location }}
+                </div>
+            
+                <button type="submit" class="search-button">
+                    Search Locations
+                    <span aria-hidden="true">→</span>
+                </button>
+            </div>
+
+            <div>
+                {{ form.location.errors }}
+            </div>
+
+        </form>
+
+        <p class="search-hint">
+            Try searching for Japan, Canada, or Tokyo.
+        </p>
+    </div>
+</section>
+
+{% if searched %}
+    <section class="results-section">
+        <div class="results-heading">
+            <h2>Matching Locations</h2>
+            <p>Explore destinations matching your search.</p>
+        </div>
+
+        <div class="location-list">
+            {% for location in matching_locations %}
+                <article class="location-item">
+                    <span class="location-icon" aria-hidden="true">
+                        ⌖
+                    </span>
+
+                    <div class="location-info">
+                        <h3>{{ location.name }}</h3>
+                        <p>
+                            {{ location.city }},
+                            {% if location.state %}
+                                {{ location.state }},
+                            {% endif %}
+                            {{ location.country }}
+                        </p>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="empty-state">
+                    No matching locations were found.
+                    Try searching for another destination.
+                </p>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+{% endblock %}
