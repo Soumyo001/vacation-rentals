@@ -47,8 +47,15 @@
 {% if searched %}
     <section class="results-section">
         <div class="results-heading">
-            <h2>Matching Locations</h2>
-            <p>Explore destinations matching your search.</p>
+            {% if semantic_suggestions %}
+                <h2>Suggested Locations</h2>
+                <p>
+                    No exact text matches were found. Here are some locations suggested by semantic search.
+                </p>
+            {% else %}
+                <h2>Matching Locations</h2>
+                <p>Explore destinations matching your search.</p>
+            {% endif %}
         </div>
 
         <div class="location-list">
@@ -79,7 +86,7 @@
                 </p>
             {% endfor %}
         </div>
-        {% if matching_locations %}
+        {% if matching_locations and not semantic_suggestions %}
             <a
                 class="view-all-link"
                 href="{% url 'property_list' %}?location={{ form.cleaned_data.location|urlencode }}"

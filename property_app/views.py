@@ -7,6 +7,7 @@ from django.http import Http404
 from django.shortcuts import render, get_object_or_404
 from property_app.forms import LocationSearchForm, SpatialFilterForm
 from property_app.models import Location, Property
+from property_app.services import semantic_location_search
 
 def home(request):
     search_data = (request.GET if "location" in request.GET else None)
@@ -14,6 +15,7 @@ def home(request):
     form = LocationSearchForm(search_data)
     matching_locations = Location.objects.none()
     searched = False
+    semantic_suggestions = False
 
     if form.is_bound and form.is_valid():
         searched = True
@@ -26,14 +28,18 @@ def home(request):
                 | Q(city__icontains=location_name)
                 | Q(state__icontains=location_name)
                 | Q(country__icontains=location_name)
-            )
-            .order_by("name", "city")[:10]
+            ).order_by("name", "city")[:10]
         )
+
+        if not matching_locations.exists():
+            matching_locations = semantic_location_search(location_name, limit=5)
+            semantic_suggestions = True
 
     context = {
         "form": form,
         "matching_locations": matching_locations,
         "searched": searched,
+        "semantic_suggestions": semantic_suggestions,
     }
 
     return render(
@@ -58,6 +64,7 @@ def property_list(request):
     search_error = ""
     spatial_message = ""
     boundary_filter_active = False
+    semantic_locations = Location.objects.none()
 
     if location_id:
         try:
@@ -123,9 +130,7 @@ def property_list(request):
         )
 
         if search_form.is_valid():
-            location_name = (
-                search_form.cleaned_data["location"]
-            )
+            location_name = search_form.cleaned_data["location"]
 
             properties = properties.filter(
                 Q(location__name__icontains=location_name)
@@ -133,6 +138,9 @@ def property_list(request):
                 | Q(location__state__icontains=location_name)
                 | Q(location__country__icontains=location_name)
             )
+
+            if not properties.exists():
+                semantic_locations = semantic_location_search(location_name, limit=5)
         else:
             properties = properties.none()
             search_error = "Enter a valid location name."
@@ -157,6 +165,7 @@ def property_list(request):
         "spatial_message": spatial_message,
         "boundary_filter_active": boundary_filter_active,
         "query_string": query_parameters.urlencode(),
+        "semantic_locations": semantic_locations,
     }
 
     return render(

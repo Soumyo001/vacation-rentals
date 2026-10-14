@@ -65,6 +65,41 @@
         <p class="form-message">{{ spatial_message }}</p>
     {% endif %}
 
+    {% if semantic_locations %}
+        <section class="results-section">
+            <div class="results-heading">
+                <h2>Suggested Locations</h2>
+                <p>
+                    No properties matched your location search. You can explore these semantically similar destinations instead.
+                </p>
+            </div>
+
+            <div class="location-list">
+                {% for location in semantic_locations %}
+                    <a
+                        class="location-item location-link"
+                        href="{% url 'property_list' %}?location_id={{ location.id }}"
+                    >
+                        <span class="location-icon" aria-hidden="true">
+                            ⌖
+                        </span>
+
+                        <div class="location-info">
+                            <h3>{{ location.name }}</h3>
+                            <p>
+                                {{ location.city }},
+                                {% if location.state %}
+                                    {{ location.state }},
+                                {% endif %}
+                                {{ location.country }}
+                            </p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
     <p class="result-count">
         {{ page_obj.paginator.count }} properties found
     </p>
