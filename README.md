@@ -174,7 +174,6 @@ vacation-rentals/
         ├── home.html
         ├── property_detail.html
         └── property_list.html
-
 ```
 
 ## Running Tests
