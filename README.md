@@ -105,11 +105,77 @@ The application is now accessible at **http://127.0.0.1:8000/**.
 
 | Path | Description |
 |---|---|
-| `/` | Homepage with live location autocomplete |
-| `/properties/` | Property listings and geographic search |
-| `/properties/<slug>/` | Property details |
-| `/api/locations/autocomplete/?q=Umeda&limit=5` | Semantic autocomplete API |
+| `/` | Homepage with live semantic location autocomplete |
+| `/?location=Japan` | Search locations by name, city, or country |
+| `/properties/` | Browse published properties with pagination |
+| `/properties/?location=Japan` | Filter properties by location |
+| `/properties/?location_id=5&radius_km=5` | Find properties within a 5 km radius using PostGIS |
+| `/properties/?location_id=5&radius_km=5&within_boundary=on` | Filter properties by radius and footprint-boundary intersection |
+| `/properties/<slug>/` | Property details, images, amenities, and distance from the reference location |
+| `/api/locations/autocomplete/?q=Umeda&limit=5` | Semantic location autocomplete REST API |
 | `/admin/` | Django administration |
+
+*Note: `location_id=5` represents Umeda in the tested database. IDs may differ after a fresh installation.*
+
+## Project Structure
+
+```bash
+vacation-rentals/
+├── .env.example
+├── .gitignore
+├── compose.yaml
+├── config/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── data/
+│   ├── rental_properties_assignment_ready.csv
+│   ├── rental_properties_assignment_ready.parquet
+│   └── rental_properties_assignment_ready.xlsx
+├── docker/
+│   └── db/
+│       ├── Dockerfile
+│       └── init.sql
+├── LICENSE
+├── manage.py
+├── property_app/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── api_views.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── management/
+│   │   ├── __init__.py
+│   │   └── commands/
+│   │       ├── __init__.py
+│   │       ├── generate_location_embeddings.py
+│   │       └── import_rentals.py
+│   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_alter_property_options.py
+│   │   └── 0003_location_location_embedding_hnsw_index.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── services.py
+│   ├── static/
+│   │   └── property_app/
+│   │       ├── autocomplete.js
+│   │       └── style.css
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── requirements.txt
+└── templates/
+    ├── base.html
+    └── property_app/
+        ├── home.html
+        ├── property_detail.html
+        └── property_list.html
+
+```
 
 ## Running Tests
 
