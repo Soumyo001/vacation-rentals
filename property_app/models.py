@@ -1,5 +1,5 @@
 from django.contrib.gis.db import models
-from pgvector.django import VectorField
+from pgvector.django import VectorField, HnswIndex
 
 class Location(models.Model):
     name = models.CharField(max_length=255)
@@ -31,6 +31,17 @@ class Location(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            HnswIndex(
+                name="location_embedding_hnsw_index",
+                fields=["embedding"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"],
+            )
+        ]
 
     def __str__(self):
         return f"{self.name}, {self.city}, {self.country}"
