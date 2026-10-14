@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block title %}Find Vacation Rentals{% endblock %}
 
 {% block content %}
@@ -21,9 +23,22 @@
         <form method="get" class="search-form">
 
             <div class="form-field">
+
                 <div class="field-group">
                     {{ form.location.label_tag }}
-                    {{ form.location }}
+                
+                    <div class="autocomplete-container">
+                        {{ form.location }}
+                    
+                        <div
+                            id="autocomplete-results"
+                            class="autocomplete-results"
+                            data-api-url="{% url 'location_autocomplete' %}"
+                            data-property-url="{% url 'property_list' %}"
+                            aria-live="polite"
+                            hidden
+                        ></div>
+                    </div>
                 </div>
             
                 <button type="submit" class="search-button">
@@ -96,5 +111,7 @@
         {% endif %}
     </section>
 {% endif %}
+
+<script src="{% static 'property_app/autocomplete.js' %}" defer></script>
 
 {% endblock %}
