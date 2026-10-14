@@ -1,0 +1,22 @@
+{% for location in locations %}
+    <a
+        class="location-item location-link"
+        href="{% url 'property_list' %}?location_id={{ location.id }}"
+    >
+        <span class="location-icon" aria-hidden="true">
+            ⌖
+        </span>
+
+        <div class="location-info">
+            <h3>{{ location.name }}</h3>
+
+            <p>
+                {{ location.city }},
+                {% if location.state %}
+                    {{ location.state }},
+                {% endif %}
+                {{ location.country }}
+            </p>
+        </div>
+    </a>
+{% endfor %}
