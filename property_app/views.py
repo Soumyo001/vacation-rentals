@@ -140,7 +140,11 @@ def property_list(request):
             )
 
             if not properties.exists():
-                semantic_locations = semantic_location_search(location_name, limit=5)
+                semantic_locations = semantic_location_search(
+                    location_name,
+                    limit=5,
+                    available_only=True,
+                )
         else:
             properties = properties.none()
             search_error = "Enter a valid location name."
