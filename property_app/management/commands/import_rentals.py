@@ -43,6 +43,7 @@ REQUIRED_COLUMNS = {
     "property_status",
     "published",
     "images",
+    "property_description",
 }
 
 
@@ -397,6 +398,7 @@ class Command(BaseCommand):
                                 "price": Decimal(row["usd_price"]),
                                 "bedrooms": int(row["bedroom_count"]),
                                 "bathrooms": int(row["bathroom_count"]),
+                                "description": row["property_description"].strip(),
                                 "amenities": amenities,
                                 "point": parse_point(
                                     row["property_lonlat"]
