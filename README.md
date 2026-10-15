@@ -101,6 +101,8 @@ python manage.py runserver
 
 The application is now accessible at **http://127.0.0.1:8000/**.
 
+> The first location search or autocomplete request may take a few seconds because the Sentence Transformers model is loaded into memory on first use. Subsequent searches are faster as the model remains cached while the Django server process is running.
+
 ## Application URLs
 
 | Path | Description |
